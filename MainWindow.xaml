@@ -6,8 +6,7 @@
         xmlns:local="clr-namespace:auto_click_tool"
         mc:Ignorable="d"
         Title="AutoClickTool" Height="450" Width="800"
-        Loaded="Window_Loaded"
-        KeyDown="Window_KeyDown">
+        Loaded="Window_Loaded">
     <Grid HorizontalAlignment="Left" VerticalAlignment="Top">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>

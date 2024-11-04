@@ -2,6 +2,7 @@
 using System.Windows.Input;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace auto_click_tool
 {
@@ -11,10 +12,29 @@ namespace auto_click_tool
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Windows APIの関数をインポート
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+        private LowLevelKeyboardProc _proc;
+        private IntPtr _hookID = IntPtr.Zero;
+
         public MainWindow()
         {
             InitializeComponent();
             SetInitialValues();
+            _proc = HookCallback;
+            _hookID = SetHook(_proc);
         }
 
         private void SetInitialValues()
@@ -29,18 +49,39 @@ namespace auto_click_tool
             this.Focus();
         }
 
-        // Rキーを押すと、マウスの座標を取得して、テキストボックスに表示する
-        private void Window_KeyDown(object sender, KeyEventArgs e)
+        private IntPtr SetHook(LowLevelKeyboardProc proc)
         {
-            if (e.Key == Key.F8)
+            using (Process curProcess = Process.GetCurrentProcess())
+            using (ProcessModule curModule = curProcess.MainModule)
             {
-                Point point = new Point(System.Windows.Forms.Cursor.Position.X, System.Windows.Forms.Cursor.Position.Y);
-                txbCordinates.Text = txbCordinates.Text + point.X.ToString() + ", " + point.Y.ToString() + "\n";
+                return SetWindowsHookEx(13, proc, GetModuleHandle(curModule.ModuleName), 0);
             }
-            else if (e.Key == Key.Escape)
+        }
+
+        private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode >= 0 && (wParam == (IntPtr)0x0100)) // 0x0100: WM_KEYDOWN
             {
-                AutoClicker.Stop();
+                int vkCode = Marshal.ReadInt32(lParam);
+                Key key = KeyInterop.KeyFromVirtualKey(vkCode);
+
+                if (key == Key.F8)
+                {
+                    Point point = new Point(System.Windows.Forms.Cursor.Position.X, System.Windows.Forms.Cursor.Position.Y);
+                    txbCordinates.Text = txbCordinates.Text + point.X.ToString() + ", " + point.Y.ToString() + "\n";
+                }
+                else if (key == Key.Escape)
+                {
+                    AutoClicker.Stop();
+                }
             }
+            return CallNextHookEx(_hookID, nCode, wParam, lParam);
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            UnhookWindowsHookEx(_hookID);
+            base.OnClosed(e);
         }
 
         // SaveボタンをクリックするとtxbCordinates.Textの内容をテキストファイルで保存する。
@@ -82,6 +123,12 @@ namespace auto_click_tool
         public void Start(int interval, string[] cordinates, MouseButton button)
         {
             AutoClicker.Start(interval, cordinates, button);
+        }
+
+        // Stopボタンをクリックすると、自動クリックを停止する
+        private void btnStop_Click(object sender, RoutedEventArgs e)
+        {
+            AutoClicker.Stop();
         }
     }
 
