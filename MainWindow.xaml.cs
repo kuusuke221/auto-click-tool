@@ -29,6 +29,8 @@ namespace auto_click_tool
         private LowLevelKeyboardProc _proc;
         private IntPtr _hookID = IntPtr.Zero;
 
+        private int defaultInterval = 1000;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -39,7 +41,7 @@ namespace auto_click_tool
 
         private void SetInitialValues()
         {
-            txbClickInterval.Text = "1000";
+            txbClickInterval.Text = defaultInterval.ToString();
             rbtnLeftClick.IsChecked = true;
         }
 
@@ -68,7 +70,7 @@ namespace auto_click_tool
                 if (key == Key.F8)
                 {
                     Point point = new Point(System.Windows.Forms.Cursor.Position.X, System.Windows.Forms.Cursor.Position.Y);
-                    txbCordinates.Text = txbCordinates.Text + point.X.ToString() + ", " + point.Y.ToString() + "\n";
+                    txbCordinates.Text = txbCordinates.Text + point.X.ToString() + ", " + point.Y.ToString() + ", " + defaultInterval.ToString() + "\n";
                 }
                 else if (key == Key.Escape)
                 {
@@ -109,20 +111,21 @@ namespace auto_click_tool
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {
             // テキストボックスの内容を取得
-            int interval = int.Parse(txbClickInterval.Text);
-            string[] cordinates = txbCordinates.Text.Split('\n');
+            string[] lines = txbCordinates.Text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            int[] intervals = lines.Select(line => int.Parse(line.Split(',').Last())).ToArray();
+            string[] cordinates = lines.Select(line => string.Join(",", line.Split(',').Take(2))).ToArray();
 
             // マウスのクリックボタンを取得
             MouseButton button = rbtnLeftClick.IsChecked == true ? MouseButton.Left : MouseButton.Right;
 
             // 自動クリックを開始
-            AutoClicker.Start(interval, cordinates, button);
+            AutoClicker.Start(intervals, cordinates, button);
         }
 
         // interval、cordinates、buttonを引数ととして渡すと、自動クリックを開始する
-        public void Start(int interval, string[] cordinates, MouseButton button)
+        public void Start(int[] intervals, string[] cordinates, MouseButton button)
         {
-            AutoClicker.Start(interval, cordinates, button);
+            AutoClicker.Start(intervals, cordinates, button);
         }
 
         // Stopボタンをクリックすると、自動クリックを停止する
@@ -138,6 +141,7 @@ namespace auto_click_tool
         private static string[] _cordinates;
         private static MouseButton _button;
         private static int _currentIndex;
+        private static int[] _intervals;
 
         [DllImport("user32.dll")]
         private static extern void SetCursorPos(int x, int y);
@@ -150,13 +154,14 @@ namespace auto_click_tool
         private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
         private const int MOUSEEVENTF_RIGHTUP = 0x10;
 
-        public static void Start(int interval, string[] cordinates, MouseButton button)
+        public static void Start(int[] intervals, string[] cordinates, MouseButton button)
         {
             _cordinates = cordinates.Where(c => !string.IsNullOrWhiteSpace(c)).ToArray();
             _button = button;
             _currentIndex = 0;
+            _intervals = intervals;
 
-            _timer = new Timer(Click, null, 0, interval);
+            _timer = new Timer(Click, null, 0, _intervals[_currentIndex]);
         }
 
         public static void Stop()
@@ -188,6 +193,9 @@ namespace auto_click_tool
             }
 
             _currentIndex = (_currentIndex + 1) % _cordinates.Length;
+
+            // 次のクリックのインターバルを設定
+            _timer.Change(_intervals[_currentIndex], Timeout.Infinite);
         }
     }
 }
