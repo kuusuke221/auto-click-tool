@@ -1,0 +1,33 @@
+﻿<Window x:Class="auto_click_tool.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:auto_click_tool"
+        mc:Ignorable="d"
+        Title="AutoClickTool" Height="450" Width="800"
+        Loaded="Window_Loaded"
+        KeyDown="Window_KeyDown">
+    <Grid HorizontalAlignment="Left" VerticalAlignment="Top">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Orientation="Vertical" Grid.Column="0">
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Click Interval:" Height="30" Margin="10" Name="lblClickInterval"/>
+                <TextBox Width="100" Height="30" Margin="10" Name="txbClickInterval"/>
+                <Label Content="ms" Height="30" Margin="10" Name="lblClickIntervalUnit"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <RadioButton Content="Left Click" GroupName="Options" Margin="10" Name="rbtnLeftClick"/>
+                <RadioButton Content="Right Click" GroupName="Options" Margin="10" Name="rbtnRightClick"/>
+            </StackPanel>
+        </StackPanel>
+
+        <StackPanel Orientation="Vertical" Grid.Column="1">
+            <TextBox Width="400" Height="300" Margin="10" Name="txbCordinates" TextWrapping="Wrap" AcceptsReturn="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
