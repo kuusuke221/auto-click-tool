@@ -1,27 +1,15 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "msbuild",
-			"problemMatcher": [
-				"$msCompile"
-			],
-			"group": "build",
-			"label": "Build: solution",
-			"detail": "Build the auto-click-tool.sln solution using dotnet build"
-		},
-		{
-			"label": "publish(x86)",
-			"command": "dotnet",
-			"type": "process",
-			"args": [
-				"publish",
-				"-c:Release",
-				"-p:PublishReadyToRun=true",
-				"-p:PublishSingleFile=true",
-				"--self-contained:false",
-			],
-			"problemMatcher": "$msCompile"
-		},
-	]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/auto-click-tool.csproj"
+            ],
+            "problemMatcher": "$msCompile"
+        }
+    ]
 }

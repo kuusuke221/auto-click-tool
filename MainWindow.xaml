@@ -28,6 +28,7 @@
 
         <StackPanel Orientation="Vertical" Grid.Column="1">
             <TextBox Width="400" Height="300" Margin="10" Name="txbCordinates" TextWrapping="Wrap" AcceptsReturn="True"/>
+            <Button Content="Save" Width="100" Height="30" Margin="10" Click="btnSave_Click"/>
         </StackPanel>
     </Grid>
 </Window>
