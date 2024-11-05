@@ -106,6 +106,27 @@ namespace auto_click_tool
             }
         }
 
+        // Openボタンをクリックするとテキストファイルを開いてtxbCordinates.Textに読み込む
+        private void btnOpen_Click(object sender, RoutedEventArgs e)
+        {
+            // ファイルパスを選択するダイアログを表示
+            Microsoft.Win32.OpenFileDialog ofd = new()
+            {
+                Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
+                DefaultExt = "txt",
+                AddExtension = true
+            };
+
+            bool? result = ofd.ShowDialog();
+
+            // ユーザーがファイルを選択した場合
+            if (result == true)
+            {
+                string path = ofd.FileName;
+                txbCordinates.Text = File.ReadAllText(path);
+            }
+        }
+
         // Startボタンをクリックすると、自動クリックを開始する
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {

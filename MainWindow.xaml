@@ -5,31 +5,30 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:auto_click_tool"
         mc:Ignorable="d"
-        Title="AutoClickTool" Height="450" Width="800"
+        Title="AutoClickTool" Height="450" Width="500"
         Loaded="Window_Loaded">
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Vertical" Grid.Column="0" Grid.Row="0">
-            <StackPanel Orientation="Horizontal">
-                <Label Content="Default Click Interval:" Height="30" Margin="10" Name="lblClickInterval"/>
-                <TextBox Width="100" Height="20" Margin="10" Name="txbClickInterval"/>
-                <Label Content="ms" Height="30" Margin="5" Name="lblClickIntervalUnit"/>
-            </StackPanel>
+        <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
+            <Label Content="Default Click Interval:" Height="30" Margin="2" Name="lblDefaultClickInterval"/>
+            <TextBox Width="100" Height="20" Margin="2" Name="txbClickInterval"/>
+            <Label Content="ms" Height="30" Margin="2" Name="lblClickIntervalUnit"/>
+            <Button Content="Save" Width="60" Height="30" Margin="2" Click="btnSave_Click"/>
+            <Button Content="Open" Width="60" Height="30" Margin="2" Click="btnOpen_Click"/>
+            <Button Content="Start" Width="60" Height="30" Margin="2" Click="btnStart_Click"/>
         </StackPanel>
 
-        <StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="0">
-            <Button Content="Save" Width="60" Height="30" Margin="10" Click="btnSave_Click"/>
-            <Button Content="Start" Width="60" Height="30" Margin="10" Click="btnStart_Click"/>
-        </StackPanel>
-
-        <TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Margin="10" Name="txbCordinates" AcceptsReturn="True" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+        <Label Grid.Column="0" Grid.Row="1" Content="X, Y, Interval" Height="30" Margin="2" Name="lblExplainTextBox"/>
+        <TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" Margin="2" Name="txbCordinates" 
+            AcceptsReturn="True" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
+            VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </Window>
