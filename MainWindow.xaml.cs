@@ -42,7 +42,6 @@ namespace auto_click_tool
         private void SetInitialValues()
         {
             txbClickInterval.Text = defaultInterval.ToString();
-            rbtnLeftClick.IsChecked = true;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -115,17 +114,14 @@ namespace auto_click_tool
             int[] intervals = lines.Select(line => int.Parse(line.Split(',').Last())).ToArray();
             string[] cordinates = lines.Select(line => string.Join(",", line.Split(',').Take(2))).ToArray();
 
-            // マウスのクリックボタンを取得
-            MouseButton button = rbtnLeftClick.IsChecked == true ? MouseButton.Left : MouseButton.Right;
-
             // 自動クリックを開始
-            AutoClicker.Start(intervals, cordinates, button);
+            AutoClicker.Start(intervals, cordinates);
         }
 
         // interval、cordinates、buttonを引数ととして渡すと、自動クリックを開始する
-        public void Start(int[] intervals, string[] cordinates, MouseButton button)
+        public void Start(int[] intervals, string[] cordinates)
         {
-            AutoClicker.Start(intervals, cordinates, button);
+            AutoClicker.Start(intervals, cordinates);
         }
 
         // Stopボタンをクリックすると、自動クリックを停止する
@@ -139,7 +135,6 @@ namespace auto_click_tool
     {
         private static Timer _timer;
         private static string[] _cordinates;
-        private static MouseButton _button;
         private static int _currentIndex;
         private static int[] _intervals;
 
@@ -151,13 +146,10 @@ namespace auto_click_tool
 
         private const int MOUSEEVENTF_LEFTDOWN = 0x02;
         private const int MOUSEEVENTF_LEFTUP = 0x04;
-        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
-        private const int MOUSEEVENTF_RIGHTUP = 0x10;
 
-        public static void Start(int[] intervals, string[] cordinates, MouseButton button)
+        public static void Start(int[] intervals, string[] cordinates)
         {
             _cordinates = cordinates.Where(c => !string.IsNullOrWhiteSpace(c)).ToArray();
-            _button = button;
             _currentIndex = 0;
             _intervals = intervals;
 
@@ -180,16 +172,8 @@ namespace auto_click_tool
             {
                 SetCursorPos(x, y);
 
-                if (_button == MouseButton.Left)
-                {
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
-                    mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
-                }
-                else if (_button == MouseButton.Right)
-                {
-                    mouse_event(MOUSEEVENTF_RIGHTDOWN, x, y, 0, 0);
-                    mouse_event(MOUSEEVENTF_RIGHTUP, x, y, 0, 0);
-                }
+                mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
+                mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
             }
 
             _currentIndex = (_currentIndex + 1) % _cordinates.Length;
