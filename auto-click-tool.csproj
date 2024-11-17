@@ -8,7 +8,12 @@
     <UseWPF>true</UseWPF>
     <LangVersion>10.0</LangVersion>
     <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+    <ApplicationIcon>Resources\auto_click_tool.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\auto_click_tool.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Windows.Forms" Version="4.0.0" />
