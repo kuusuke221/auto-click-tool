@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:auto_click_tool"
         mc:Ignorable="d"
-        Title="AutoClickTool" Height="450" Width="530"
+        Title="AutoClickTool(v1.0.0)" Height="450" Width="530"
         Loaded="Window_Loaded">
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Grid.ColumnDefinitions>
