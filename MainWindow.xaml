@@ -5,13 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:auto_click_tool"
         mc:Ignorable="d"
-        Title="AutoClickTool" Height="450" Width="500"
+        Title="AutoClickTool" Height="450" Width="530"
         Loaded="Window_Loaded">
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -21,14 +23,20 @@
             <Label Content="Default Click Interval:" Height="30" Margin="2" Name="lblDefaultClickInterval"/>
             <TextBox Width="100" Height="20" Margin="2" Name="txbClickInterval"/>
             <Label Content="ms" Height="30" Margin="2" Name="lblClickIntervalUnit"/>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Save" Width="60" Height="30" Margin="2" Click="btnSave_Click"/>
             <Button Content="Open" Width="60" Height="30" Margin="2" Click="btnOpen_Click"/>
             <Button Content="Start" Width="60" Height="30" Margin="2" Click="btnStart_Click"/>
         </StackPanel>
 
-        <Label Grid.Column="0" Grid.Row="1" Content="X, Y, Interval" Height="30" Margin="2" Name="lblExplainTextBox"/>
-        <TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="2" Margin="2" Name="txbCordinates" 
-            AcceptsReturn="True" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
-            VerticalScrollBarVisibility="Auto"/>
+        <Label Grid.Column="1" Grid.Row="1" Content="Edit Mode" Height="30" Margin="2" Name="lblMode" HorizontalAlignment="Right"/>
+        <Label Grid.Column="0" Grid.Row="2" Content="X, Y, Interval" Height="30" Margin="2" Name="lblExplainTextBox"/>
+        <Label Grid.Column="1" Grid.Row="2" Content="00:00:00" Height="30" Margin="2" Name="lblTimerCount" HorizontalAlignment="Right"/>
+
+        <TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3" Margin="2" Name="txbCordinates" 
+                 AcceptsReturn="True" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
+                 VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </Window>

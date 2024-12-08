@@ -1,8 +1,9 @@
-﻿using System.Windows;
-using System.Windows.Input;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Diagnostics;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace auto_click_tool
 {
@@ -29,19 +30,32 @@ namespace auto_click_tool
         private LowLevelKeyboardProc _proc;
         private IntPtr _hookID = IntPtr.Zero;
 
-        private int defaultInterval = 1000;
+        private DispatcherTimer timerCount;
+        private DateTime startTime;
 
         public MainWindow()
         {
             InitializeComponent();
             SetInitialValues();
+            InitializeTimerCount();
             _proc = HookCallback;
             _hookID = SetHook(_proc);
         }
 
         private void SetInitialValues()
         {
-            txbClickInterval.Text = defaultInterval.ToString();
+            txbClickInterval.Text = "1000";
+        }
+
+        private void InitializeTimerCount()
+        {
+            // タイマーの初期設定
+            timerCount = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(100) // 100ミリ秒ごとにイベント発生
+            };
+
+            timerCount.Tick += Timer_Tick;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -59,6 +73,7 @@ namespace auto_click_tool
             }
         }
 
+        // キーボードの入力を取得して、イベントを実行
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode >= 0 && (wParam == (IntPtr)0x0100)) // 0x0100: WM_KEYDOWN
@@ -69,10 +84,12 @@ namespace auto_click_tool
                 if (key == Key.F8)
                 {
                     Point point = new Point(System.Windows.Forms.Cursor.Position.X, System.Windows.Forms.Cursor.Position.Y);
-                    txbCordinates.Text = txbCordinates.Text + point.X.ToString() + ", " + point.Y.ToString() + ", " + defaultInterval.ToString() + "\n";
+                    txbCordinates.Text = txbCordinates.Text + point.X.ToString() + ", " + point.Y.ToString() + ", " + txbClickInterval.Text.ToString() + "\n";
                 }
                 else if (key == Key.Escape)
                 {
+                    lblMode.Content = "Edit Mode";
+                    timerCount.Stop();
                     AutoClicker.Stop();
                 }
             }
@@ -134,27 +151,35 @@ namespace auto_click_tool
             string[] lines = txbCordinates.Text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             int[] intervals = lines.Select(line => int.Parse(line.Split(',').Last())).ToArray();
             string[] cordinates = lines.Select(line => string.Join(",", line.Split(',').Take(2))).ToArray();
+            lblMode.Content = "Running Mode";
+
+            // タイマー開始
+            startTime = DateTime.Now;
+            timerCount.Start();
 
             // 自動クリックを開始
             AutoClicker.Start(intervals, cordinates);
+
         }
 
-        // interval、cordinates、buttonを引数ととして渡すと、自動クリックを開始する
-        public void Start(int[] intervals, string[] cordinates)
+        private void Timer_Tick(object sender, EventArgs e)
         {
-            AutoClicker.Start(intervals, cordinates);
-        }
+            if (AutoClicker.timerReset)
+            {
+                startTime = DateTime.Now;
+                AutoClicker.timerReset = false;
+            }
 
-        // Stopボタンをクリックすると、自動クリックを停止する
-        private void btnStop_Click(object sender, RoutedEventArgs e)
-        {
-            AutoClicker.Stop();
+            TimeSpan elapsedTime = DateTime.Now - startTime;
+            lblTimerCount.Content = elapsedTime.ToString(@"hh\:mm\:ss");
+            //lblTimerCount.Content = "111";
         }
     }
 
     public static class AutoClicker
     {
-        private static Timer _timer;
+        public static Timer timer;
+        public static bool timerReset = false;
         private static string[] _cordinates;
         private static int _currentIndex;
         private static int[] _intervals;
@@ -174,12 +199,12 @@ namespace auto_click_tool
             _currentIndex = 0;
             _intervals = intervals;
 
-            _timer = new Timer(Click, null, 0, _intervals[_currentIndex]);
+            timer = new Timer(Click, null, 0, _intervals[_currentIndex]);
         }
 
         public static void Stop()
         {
-            _timer?.Dispose();
+            timer?.Dispose();
         }
 
         private static void Click(object state)
@@ -200,7 +225,8 @@ namespace auto_click_tool
             _currentIndex = (_currentIndex + 1) % _cordinates.Length;
 
             // 次のクリックのインターバルを設定
-            _timer.Change(_intervals[_currentIndex], Timeout.Infinite);
+            timer.Change(_intervals[_currentIndex], Timeout.Infinite);
+            timerReset = true;
         }
     }
 }
