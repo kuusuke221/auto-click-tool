@@ -32,6 +32,7 @@ namespace auto_click_tool
 
         private DispatcherTimer timerCount;
         private DateTime startTime;
+        private PseudoCursorWindow _pseudoCursor;
 
         public MainWindow()
         {
@@ -40,6 +41,7 @@ namespace auto_click_tool
             InitializeTimerCount();
             _proc = HookCallback;
             _hookID = SetHook(_proc);
+            _pseudoCursor = null;
         }
 
         private void SetInitialValues()
@@ -99,6 +101,21 @@ namespace auto_click_tool
         protected override void OnClosed(EventArgs e)
         {
             UnhookWindowsHookEx(_hookID);
+
+            // Ensure pseudo cursor window is closed when main window closes
+            try
+            {
+                if (_pseudoCursor != null)
+                {
+                    _pseudoCursor.Close();
+                    _pseudoCursor = null;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
             base.OnClosed(e);
         }
 
@@ -160,6 +177,59 @@ namespace auto_click_tool
             // 自動クリックを開始
             AutoClicker.Start(intervals, cordinates);
 
+        }
+
+        // Checkボタン: カーソルが存在する行の座標を取得して疑似マウスカーソルを表示
+        private void btnCheck_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                int caret = txbCordinates.CaretIndex;
+                int lineIndex = txbCordinates.GetLineIndexFromCharacterIndex(caret);
+                if (lineIndex < 0 || lineIndex >= txbCordinates.LineCount) return;
+
+                string line = txbCordinates.GetLineText(lineIndex).Trim();
+                if (string.IsNullOrWhiteSpace(line)) return;
+
+                var rawParts = line.Split(',');
+                if (rawParts.Length < 2) return;
+
+                string sx = rawParts[0].Trim();
+                string sy = rawParts[1].Trim();
+
+                if (int.TryParse(sx, out int x) && int.TryParse(sy, out int y))
+                {
+                    // 既に疑似カーソルが表示されている場合は移動、なければ作成して表示
+                    if (_pseudoCursor == null)
+                    {
+                        _pseudoCursor = new PseudoCursorWindow();
+                        _pseudoCursor.Show();
+                    }
+
+                    _pseudoCursor.MoveTo(x, y);
+                }
+            }
+            catch
+            {
+                // 無視
+            }
+        }
+
+        // Reset Checkボタン: 疑似マウスカーソルを削除
+        private void btnResetCheck_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_pseudoCursor != null)
+                {
+                    _pseudoCursor.Close();
+                    _pseudoCursor = null;
+                }
+            }
+            catch
+            {
+                // 無視
+            }
         }
 
         private void Timer_Tick(object sender, EventArgs e)
