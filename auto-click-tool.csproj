@@ -9,6 +9,8 @@
     <LangVersion>10.0</LangVersion>
     <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
     <ApplicationIcon>Resources\auto_click_tool.ico</ApplicationIcon>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
