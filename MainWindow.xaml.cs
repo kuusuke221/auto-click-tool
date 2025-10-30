@@ -13,6 +13,10 @@ namespace auto_click_tool
     /// </summary>
     public partial class MainWindow : Window
     {
+        /// <summary>
+        /// Main window for AutoClickTool. Handles user interactions and delegates
+        /// business logic to services where appropriate.
+        /// </summary>
         // Windows APIの関数をインポート
         [DllImport("user32.dll")]
         private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
@@ -34,6 +38,10 @@ namespace auto_click_tool
         private DateTime startTime;
         private PseudoCursorWindow _pseudoCursor;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="MainWindow"/>.
+        /// Sets up timers and hooks required for the UI.
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
@@ -248,10 +256,30 @@ namespace auto_click_tool
 
     public static class AutoClicker
     {
+        /// <summary>
+        /// Performs automatic mouse clicks for a list of coordinates with per-item intervals.
+        /// This static helper manages a background <see cref="System.Threading.Timer"/> that
+        /// moves the cursor and sends mouse down/up events.
+        /// </summary>
         public static Timer timer;
+        /// <summary>
+        /// Indicates whether the timer was reset by the click loop.
+        /// </summary>
         public static bool timerReset = false;
+
+        /// <summary>
+        /// Coordinates in the form of "X,Y" for each click step.
+        /// </summary>
         private static string[] _cordinates;
+
+        /// <summary>
+        /// Current index in the coordinates array.
+        /// </summary>
         private static int _currentIndex;
+
+        /// <summary>
+        /// Intervals (in milliseconds) for each coordinate.
+        /// </summary>
         private static int[] _intervals;
 
         [DllImport("user32.dll")]
@@ -263,6 +291,11 @@ namespace auto_click_tool
         private const int MOUSEEVENTF_LEFTDOWN = 0x02;
         private const int MOUSEEVENTF_LEFTUP = 0x04;
 
+        /// <summary>
+        /// Start automatic clicking sequence.
+        /// </summary>
+        /// <param name="intervals">Array of intervals in milliseconds for each click.</param>
+        /// <param name="cordinates">Array of coordinates where each item is "X,Y".</param>
         public static void Start(int[] intervals, string[] cordinates)
         {
             _cordinates = cordinates.Where(c => !string.IsNullOrWhiteSpace(c)).ToArray();
@@ -272,11 +305,18 @@ namespace auto_click_tool
             timer = new Timer(Click, null, 0, _intervals[_currentIndex]);
         }
 
+        /// <summary>
+        /// Stop the automatic clicking sequence and dispose the timer.
+        /// </summary>
         public static void Stop()
         {
             timer?.Dispose();
         }
 
+        /// <summary>
+        /// Timer callback that performs a single click at the current coordinate and advances the index.
+        /// </summary>
+        /// <param name="state">State object passed by the timer (unused).</param>
         private static void Click(object state)
         {
             if (_cordinates.Length == 0) return;
