@@ -11,10 +11,15 @@ namespace auto_click_tool
         private DispatcherTimer _blinkTimer;
         private bool _visible = true;
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="PseudoCursorWindow"/>.
+        /// The window is configured to be non-interactive and topmost so it can display
+        /// a blinking pseudo-cursor without receiving focus.
+        /// </summary>
         public PseudoCursorWindow()
         {
             InitializeComponent();
-            // ƒEƒBƒ“ƒhƒE‚ÌƒNƒŠƒbƒN‚âƒtƒH[ƒJƒX‚ğ–³‹‚µ‚ÄAí‚É”wŒã‚Ì‘€ì‚ğ‰Â”\‚É‚·‚é
+            // ï¿½Eï¿½Bï¿½ï¿½ï¿½hï¿½Eï¿½ÌƒNï¿½ï¿½ï¿½bï¿½Nï¿½ï¿½tï¿½Hï¿½[ï¿½Jï¿½Xï¿½ğ–³ï¿½ï¿½ï¿½ï¿½ÄAï¿½ï¿½É”wï¿½ï¿½Ì‘ï¿½ï¿½ï¿½ï¿½ï¿½Â”\ï¿½É‚ï¿½ï¿½ï¿½
             this.IsHitTestVisible = false;
             this.Focusable = false;
             this.ShowActivated = false;
@@ -30,7 +35,7 @@ namespace auto_click_tool
         protected override void OnContentRendered(EventArgs e)
         {
             base.OnContentRendered(e);
-            // •\¦‚³‚ê‚½‚ç“_–ÅŠJn
+            // ï¿½\ï¿½ï¿½ï¿½ï¿½ï¿½ê‚½ï¿½ï¿½_ï¿½ÅŠJï¿½n
             _blinkTimer.Start();
         }
 
@@ -40,12 +45,20 @@ namespace auto_click_tool
             base.OnClosed(e);
         }
 
-        private void BlinkTimer_Tick(object? sender, EventArgs e)
+        private void BlinkTimer_Tick(object sender, EventArgs e)
         {
             _visible = !_visible;
             ellipsePseudoCursor.Opacity = _visible ? 0.95 : 0.15;
         }
 
+        /// <summary>
+        /// Move the pseudo cursor window to the specified screen coordinates.
+        /// Coordinates are provided in physical screen pixels; this method
+        /// converts to WPF device-independent units (DIPs) to position the window
+        /// correctly on high-DPI displays.
+        /// </summary>
+        /// <param name="x">X coordinate in physical pixels.</param>
+        /// <param name="y">Y coordinate in physical pixels.</param>
         public void MoveTo(int x, int y)
         {
             try
@@ -67,7 +80,7 @@ namespace auto_click_tool
                     dipPoint = new Point(x / dpi.DpiScaleX, y / dpi.DpiScaleY);
                 }
 
-                // ’†‰›‚É‡‚í‚¹‚é
+                // ï¿½ï¿½ï¿½ï¿½ï¿½Éï¿½ï¿½í‚¹ï¿½ï¿½
                 this.Left = dipPoint.X - (this.Width / 2);
                 this.Top = dipPoint.Y - (this.Height / 2);
             }
