@@ -45,14 +45,13 @@
             <Button Content="Reset Check (Ctrl+Shift+R)" Width="190" Height="30" Margin="2" Click="btnResetCheck_Click"/>
         </StackPanel>
 
-        <!-- Default Click Interval moved to row 2 (left) -->
+        <!-- Default Click Interval on the left, Edit Mode on the right -->
         <StackPanel Grid.Column="0" Grid.Row="2" Orientation="Horizontal" Grid.ColumnSpan="2">
             <Label Content="Default Click Interval:" Height="30" Margin="2" Name="lblDefaultClickInterval"/>
             <TextBox Width="100" Height="20" Margin="2" Name="txbClickInterval"/>
             <Label Content="ms" Height="30" Margin="2" Name="lblClickIntervalUnit"/>
         </StackPanel>
-        <!-- Mode on the same row as Default Click Interval, right aligned -->
-        <Label Grid.Column="2" Grid.Row="2" Content="Edit Mode" Height="30" Margin="295,2,0,2" Name="lblMode" HorizontalAlignment="Left"/>
+        <Label Grid.Column="2" Grid.Row="2" Content="Edit Mode" Height="30" Margin="2" Name="lblMode" HorizontalAlignment="Right" VerticalAlignment="Center"/>
 
         <!-- Explain and timer on row 3 -->
         <Grid Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="3">
