@@ -5,40 +5,67 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:auto_click_tool"
         mc:Ignorable="d"
-        Title="AutoClickTool(v1.1.0)" Height="600" Width="700" MinHeight="600" MinWidth="700"
+        Title="AutoClickTool(v1.2.0)" Height="600" Width="700" MinHeight="600" MinWidth="700"
         Loaded="Window_Loaded">
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="103.649"/>
+            <ColumnDefinition Width="234.351"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
+        <!-- Toolbar: left group and Start/Stop buttons aligned right -->
+        <Grid Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button x:Name="btnOpen" Content="Open" Width="60" Height="30" Margin="2" Click="btnOpen_Click"/>
+                <Button x:Name="btnSave" Content="Save" Width="60" Height="30" Margin="2" Click="btnSave_Click"/>
+                <Button x:Name="btnAddPoint" Content="Add Point (F8)" Width="90" Height="30" Margin="2" Click="btnAddPoint_Click"/>
+                <Button x:Name="btnRecord" Content="Record" Width="60" Height="30" Margin="2" Click="btnRecord_Click"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Start" Width="60" Height="30" Margin="2" Click="btnStart_Click"/>
+                <Button x:Name="btnStop" Content="Stop (Esc)" Width="90" Height="30" Margin="2" Click="btnStop_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- New second row: Check buttons on the left, mode on the right -->
+        <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Horizontal" Grid.ColumnSpan="2">
+            <Button Content="Check (Ctrl+Shift+C)" Width="140" Height="30" Margin="2" Click="btnCheck_Click"/>
+            <Button Content="Reset Check (Ctrl+Shift+R)" Width="190" Height="30" Margin="2" Click="btnResetCheck_Click"/>
+        </StackPanel>
+
+        <!-- Default Click Interval moved to row 2 (left) -->
+        <StackPanel Grid.Column="0" Grid.Row="2" Orientation="Horizontal" Grid.ColumnSpan="2">
             <Label Content="Default Click Interval:" Height="30" Margin="2" Name="lblDefaultClickInterval"/>
             <TextBox Width="100" Height="20" Margin="2" Name="txbClickInterval"/>
             <Label Content="ms" Height="30" Margin="2" Name="lblClickIntervalUnit"/>
         </StackPanel>
+        <!-- Mode on the same row as Default Click Interval, right aligned -->
+        <Label Grid.Column="2" Grid.Row="2" Content="Edit Mode" Height="30" Margin="295,2,0,2" Name="lblMode" HorizontalAlignment="Left"/>
 
-        <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Save" Width="60" Height="30" Margin="2" Click="btnSave_Click"/>
-            <Button Content="Open" Width="60" Height="30" Margin="2" Click="btnOpen_Click"/>
-            <Button Content="Check" Width="60" Height="30" Margin="2" Click="btnCheck_Click"/>
-            <Button Content="Reset Check" Width="90" Height="30" Margin="2" Click="btnResetCheck_Click"/>
-            <Button Content="Start" Width="60" Height="30" Margin="2" Click="btnStart_Click"/>
-        </StackPanel>
+        <!-- Explain and timer on row 3 -->
+        <Grid Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0" Content="X, Y, Interval" Height="30" Margin="2" Name="lblExplainTextBox" HorizontalAlignment="Left"/>
+            <Label Grid.Column="1" Content="00:00:00" Height="30" Margin="2" Name="lblTimerCount" HorizontalAlignment="Right"/>
+        </Grid>
 
-        <Label Grid.Column="1" Grid.Row="1" Content="Edit Mode" Height="30" Margin="2" Name="lblMode" HorizontalAlignment="Right"/>
-        <Label Grid.Column="0" Grid.Row="2" Content="X, Y, Interval" Height="30" Margin="2" Name="lblExplainTextBox"/>
-        <Label Grid.Column="1" Grid.Row="2" Content="00:00:00" Height="30" Margin="2" Name="lblTimerCount" HorizontalAlignment="Right"/>
-
-        <TextBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3" Margin="2" Name="txbCordinates" 
-                 AcceptsReturn="True" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" 
+        <TextBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4" Margin="2,2,2,2" Name="txbCordinates" 
+                 AcceptsReturn="True" 
                  VerticalScrollBarVisibility="Auto"/>
     </Grid>
 </Window>

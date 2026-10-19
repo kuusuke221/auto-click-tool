@@ -2,32 +2,37 @@
 
 ### Overview
 
-This is a tool to automate clicking. Record mouse coordinates with F8 key and start clicking with Start button.
-You can save the recorded cordinates in TXT file by Save button and restore it by Open button.
+AutoClickTool automates mouse clicks using a recorded list of coordinates and per-item intervals. Use the UI to record points, preview positions, and run or stop the automatic click loop. Save and load coordinate lists as text files.
 
-<img width="1032" height="891" alt="image" src="https://github.com/user-attachments/assets/d9bec6de-d99c-4f17-b2bc-f31091fdd0e6" />
+![screenshot](https://github.com/user-attachments/assets/d9bec6de-d99c-4f17-b2bc-f31091fdd0e6)
 
 ### Controls
 
-The following table lists the main UI controls in the application and a short description of their purpose.
+The following table lists the main UI controls and a short description of their purpose.
 
 | Control | Description |
 |---|---|
-| Default Click Interval | Input for the default click interval in milliseconds. Applied when recording coordinates with the record action. |
-| Save | Save the recorded coordinates to a text file. |
-| Open | Load recorded coordinates from a text file into the coordinates area. |
-| Check | Shows a blinking pseudo-cursor at the position specified on the currently selected line in the coordinates area for a visual preview. |
-| Reset Check | Removes the pseudo-cursor preview from the screen. |
-| Start | Starts the automated click sequence using the list of `X, Y, Interval` lines from the coordinates area. |
-| Coordinates List | The main multi-line text area where each line should be formatted as `X, Y, Interval`. The caret position determines which line the Preview uses. Use the record shortcut to append the current mouse position. |
+| `Default Click Interval` | Default interval in milliseconds used when appending points while not in Record mode. |
+| `Open` | Load a saved coordinates text file into the `Coordinates List`. |
+| `Save` | Save the contents of the `Coordinates List` to a text file. |
+| `Add Point (F8)` | Append the current mouse position to the `Coordinates List`. When recording, the appended interval is the elapsed time since the last recorded point; otherwise the `Default Click Interval` is used. |
+| `Record` | Toggle Record mode. In Record mode the app measures elapsed time between recorded points and uses that as each point's interval. The timer shows seconds since the last record. |
+| `Start` | Start the automated clicking sequence using the `Coordinates List` (each line must be `X, Y, Interval`). |
+| `Stop (Esc)` | Stop the automated clicking sequence or exit Record mode. Equivalent to pressing `Escape`. |
+| `Check` | Show a pseudo-cursor at the coordinates on the caret's current line for visual verification. |
+| `Reset Check` | Remove the pseudo-cursor preview. |
+| `Coordinates List` | Multi-line text area where each line is `X, Y, Interval`. The caret determines which line `Check` previews. |
 
 ### Keyboard shortcuts
 
-- `F8`: Records the current mouse position and appends a line to the `Coordinates List` using the value from `Default Click Interval` as the interval.
-- `Escape`: Stops the running auto-clicker and returns to Edit Mode.
+- `F8`: Append current mouse position to the `Coordinates List`. If in Record mode, the appended interval is time elapsed since the previous recorded point; otherwise the `Default Click Interval` is used.
+- `Escape`: Stop the running auto-clicker or exit Record mode.
+- `Ctrl+Shift+C`: Equivalent to clicking `Check` (shows pseudo-cursor for the current line).
+- `Ctrl+Shift+R`: Equivalent to clicking `Reset Check` (remove pseudo-cursor).
 
 ### Notes
 
-- The pseudo-cursor preview is displayed as a small blinking indicator on screen and is DPI-aware to work correctly on high-DPI displays.
-- Coordinate lines must be numeric and separated by commas. Invalid lines are ignored by the auto-clicker.
+- The pseudo-cursor preview is a small visual indicator; it is DPI-aware for high-DPI displays.
+- Coordinate lines must contain numeric values separated by commas. Invalid or malformed lines are ignored by the auto-clicker.
+
 
