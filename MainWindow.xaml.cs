@@ -17,7 +17,7 @@ namespace auto_click_tool
         /// Main window for AutoClickTool. Handles user interactions and delegates
         /// business logic to services where appropriate.
         /// </summary>
-        // Windows APIの関数をインポート
+        // Import Windows API functions
         [DllImport("user32.dll")]
         private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
 
@@ -30,6 +30,9 @@ namespace auto_click_tool
         [DllImport("kernel32.dll")]
         private static extern IntPtr GetModuleHandle(string lpModuleName);
 
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int vKey);
+
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
         private LowLevelKeyboardProc _proc;
         private IntPtr _hookID = IntPtr.Zero;
@@ -37,6 +40,11 @@ namespace auto_click_tool
         private DispatcherTimer timerCount;
         private DateTime startTime;
         private PseudoCursorWindow _pseudoCursor;
+
+        // Recording mode state
+        private bool isRecording = false;
+        private DateTime recordStartTime;
+        private DateTime lastRecordTime;
 
         /// <summary>
         /// Initializes a new instance of <see cref="MainWindow"/>.
@@ -59,10 +67,10 @@ namespace auto_click_tool
 
         private void InitializeTimerCount()
         {
-            // タイマーの初期設定
+            // Initialize the timer
             timerCount = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(100) // 100ミリ秒ごとにイベント発生
+                Interval = TimeSpan.FromMilliseconds(100) // Tick every 100 milliseconds
             };
 
             timerCount.Tick += Timer_Tick;
@@ -70,7 +78,7 @@ namespace auto_click_tool
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // ウィンドウにフォーカスを設定
+            // Set focus to the window
             this.Focus();
         }
 
@@ -83,24 +91,85 @@ namespace auto_click_tool
             }
         }
 
-        // キーボードの入力を取得して、イベントを実行
+        // Capture keyboard input and dispatch events
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && (wParam == (IntPtr)0x0100)) // 0x0100: WM_KEYDOWN
+            const int WM_KEYDOWN = 0x0100;
+            const int VK_CONTROL = 0x11;
+            const int VK_SHIFT = 0x10;
+            const int VK_C = 0x43;
+            const int VK_R = 0x52;
+            if (nCode >= 0 && (wParam == (IntPtr)WM_KEYDOWN)) // WM_KEYDOWN
             {
                 int vkCode = Marshal.ReadInt32(lParam);
+
+                // Handle Ctrl+Shift+C and Ctrl+Shift+R as global shortcuts for Check / Reset Check
+                try
+                {
+                    if (vkCode == VK_C && (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0 && (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0)
+                    {
+                        // Invoke Check action on UI thread
+                        this.Dispatcher.Invoke(() => btnCheck_Click(null, null));
+                        return CallNextHookEx(_hookID, nCode, wParam, lParam);
+                    }
+
+                    if (vkCode == VK_R && (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0 && (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0)
+                    {
+                        this.Dispatcher.Invoke(() => btnResetCheck_Click(null, null));
+                        return CallNextHookEx(_hookID, nCode, wParam, lParam);
+                    }
+                }
+                catch
+                {
+                    // Ignore errors checking key state
+                }
+
                 Key key = KeyInterop.KeyFromVirtualKey(vkCode);
 
                 if (key == Key.F8)
                 {
-                    Point point = new Point(System.Windows.Forms.Cursor.Position.X, System.Windows.Forms.Cursor.Position.Y);
-                    txbCordinates.Text = txbCordinates.Text + point.X.ToString() + ", " + point.Y.ToString() + ", " + txbClickInterval.Text.ToString() + "\n";
+                    // If in recording mode, record elapsed time since last record (or since record start)
+                    if (isRecording)
+                    {
+                        var pos = System.Windows.Forms.Cursor.Position;
+                        DateTime now = DateTime.Now;
+                        int elapsedMs = (int)(now - lastRecordTime).TotalMilliseconds;
+                        lastRecordTime = now;
+
+                        // Update UI on dispatcher (hook runs on a different thread)
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            txbCordinates.Text = txbCordinates.Text + pos.X.ToString() + ", " + pos.Y.ToString() + ", " + elapsedMs.ToString() + "\n";
+                        });
+                    }
+                    else
+                    {
+                        // Existing behavior when not recording: use default click interval
+                        var pos = System.Windows.Forms.Cursor.Position;
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            txbCordinates.Text = txbCordinates.Text + pos.X.ToString() + ", " + pos.Y.ToString() + ", " + txbClickInterval.Text.ToString() + "\n";
+                        });
+                    }
                 }
                 else if (key == Key.Escape)
                 {
-                    lblMode.Content = "Edit Mode";
-                    timerCount.Stop();
-                    AutoClicker.Stop();
+                    if (isRecording)
+                    {
+                        // Stop recording and switch to Edit Mode
+                        isRecording = false;
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            lblMode.Content = "Edit Mode";
+                        });
+                        timerCount.Stop();
+                    }
+                    else
+                    {
+                        lblMode.Content = "Edit Mode";
+                        timerCount.Stop();
+                        AutoClicker.Stop();
+                    }
                 }
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
@@ -110,7 +179,7 @@ namespace auto_click_tool
         {
             UnhookWindowsHookEx(_hookID);
 
-            // Ensure pseudo cursor window is closed when main window closes
+            // Ensure pseudo cursor window is closed when the main window closes
             try
             {
                 if (_pseudoCursor != null)
@@ -121,16 +190,16 @@ namespace auto_click_tool
             }
             catch
             {
-                // ignore
+                // Ignore
             }
 
             base.OnClosed(e);
         }
 
-        // SaveボタンをクリックするとtxbCordinates.Textの内容をテキストファイルで保存する。
+        // Save button: write txbCordinates.Text to a text file
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            // ファイルパスを選択するダイアログを表示
+            // Show a save file dialog
             Microsoft.Win32.SaveFileDialog sfd = new()
             {
                 Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
@@ -140,7 +209,7 @@ namespace auto_click_tool
 
             bool? result = sfd.ShowDialog();
 
-            // ユーザーがファイルを選択した場合
+            // If the user selected a file
             if (result == true)
             {
                 string path = sfd.FileName;
@@ -148,10 +217,10 @@ namespace auto_click_tool
             }
         }
 
-        // Openボタンをクリックするとテキストファイルを開いてtxbCordinates.Textに読み込む
+        // Open button: load a text file into txbCordinates.Text
         private void btnOpen_Click(object sender, RoutedEventArgs e)
         {
-            // ファイルパスを選択するダイアログを表示
+            // Show an open file dialog
             Microsoft.Win32.OpenFileDialog ofd = new()
             {
                 Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
@@ -161,7 +230,7 @@ namespace auto_click_tool
 
             bool? result = ofd.ShowDialog();
 
-            // ユーザーがファイルを選択した場合
+            // If the user selected a file
             if (result == true)
             {
                 string path = ofd.FileName;
@@ -169,25 +238,25 @@ namespace auto_click_tool
             }
         }
 
-        // Startボタンをクリックすると、自動クリックを開始する
+        // Start button: parse coordinates and intervals, start the timer and automatic clicking
         private void btnStart_Click(object sender, RoutedEventArgs e)
         {
-            // テキストボックスの内容を取得
+            // Parse the coordinates and intervals from the text box
             string[] lines = txbCordinates.Text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             int[] intervals = lines.Select(line => int.Parse(line.Split(',').Last())).ToArray();
             string[] cordinates = lines.Select(line => string.Join(",", line.Split(',').Take(2))).ToArray();
             lblMode.Content = "Running Mode";
 
-            // タイマー開始
+            // Start the timer
             startTime = DateTime.Now;
             timerCount.Start();
 
-            // 自動クリックを開始
+            // Start automatic clicking
             AutoClicker.Start(intervals, cordinates);
 
         }
 
-        // Checkボタン: カーソルが存在する行の座標を取得して疑似マウスカーソルを表示
+        // Check button: get coordinates from the caret line and show a pseudo cursor
         private void btnCheck_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -207,7 +276,7 @@ namespace auto_click_tool
 
                 if (int.TryParse(sx, out int x) && int.TryParse(sy, out int y))
                 {
-                    // 既に疑似カーソルが表示されている場合は移動、なければ作成して表示
+                    // If a pseudo cursor already exists, move it; otherwise create and show it
                     if (_pseudoCursor == null)
                     {
                         _pseudoCursor = new PseudoCursorWindow();
@@ -219,11 +288,11 @@ namespace auto_click_tool
             }
             catch
             {
-                // 無視
+                // Ignore
             }
         }
 
-        // Reset Checkボタン: 疑似マウスカーソルを削除
+        // Reset Check button: remove the pseudo cursor
         private void btnResetCheck_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -236,12 +305,21 @@ namespace auto_click_tool
             }
             catch
             {
-                // 無視
+                // Ignore
             }
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
+            if (isRecording)
+            {
+                // In record mode, show time since last record (or since recording started)
+                TimeSpan elapsedSinceLast = DateTime.Now - lastRecordTime;
+                // Do not display sub-second precision; show only whole seconds
+                lblTimerCount.Content = elapsedSinceLast.ToString(@"hh\:mm\:ss");
+                return;
+            }
+
             if (AutoClicker.timerReset)
             {
                 startTime = DateTime.Now;
@@ -251,6 +329,69 @@ namespace auto_click_tool
             TimeSpan elapsedTime = DateTime.Now - startTime;
             lblTimerCount.Content = elapsedTime.ToString(@"hh\:mm\:ss");
             //lblTimerCount.Content = "111";
+        }
+
+        // Record button: start/stop recording mode
+        private void btnRecord_Click(object sender, RoutedEventArgs e)
+        {
+            if (!isRecording)
+            {
+                // Start
+                isRecording = true;
+                recordStartTime = DateTime.Now;
+                lastRecordTime = recordStartTime;
+                lblMode.Content = "Record Mode";
+                timerCount.Start();
+            }
+            else
+            {
+                // Stop (same as ESC): switch to Edit Mode
+                isRecording = false;
+                lblMode.Content = "Edit Mode";
+                timerCount.Stop();
+            }
+        }
+
+        // Add Point button handler (same behavior as F8)
+        private void btnAddPoint_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var pos = System.Windows.Forms.Cursor.Position;
+                if (isRecording)
+                {
+                    DateTime now = DateTime.Now;
+                    int elapsedMs = (int)(now - lastRecordTime).TotalMilliseconds;
+                    lastRecordTime = now;
+                    txbCordinates.Text = txbCordinates.Text + pos.X.ToString() + ", " + pos.Y.ToString() + ", " + elapsedMs.ToString() + "\n";
+                }
+                else
+                {
+                    txbCordinates.Text = txbCordinates.Text + pos.X.ToString() + ", " + pos.Y.ToString() + ", " + txbClickInterval.Text.ToString() + "\n";
+                }
+            }
+            catch
+            {
+                // Ignore
+            }
+        }
+
+        // Stop button (or Esc) handler
+        private void btnStop_Click(object sender, RoutedEventArgs e)
+        {
+            if (isRecording)
+            {
+                // Stop recording and switch to Edit Mode
+                isRecording = false;
+                lblMode.Content = "Edit Mode";
+                timerCount.Stop();
+            }
+            else
+            {
+                lblMode.Content = "Edit Mode";
+                timerCount.Stop();
+                AutoClicker.Stop();
+            }
         }
     }
 
@@ -334,7 +475,7 @@ namespace auto_click_tool
 
             _currentIndex = (_currentIndex + 1) % _cordinates.Length;
 
-            // 次のクリックのインターバルを設定
+            // Reset the timer for the next click based on the interval of the next coordinate
             timer.Change(_intervals[_currentIndex], Timeout.Infinite);
             timerReset = true;
         }
