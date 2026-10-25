@@ -4,7 +4,7 @@
 
 AutoClickTool automates mouse clicks using a recorded list of coordinates and per-item intervals. Use the UI to record points, preview positions, and run or stop the automatic click loop. Save and load coordinate lists as text files.
 
-![screenshot](https://github.com/user-attachments/assets/d9bec6de-d99c-4f17-b2bc-f31091fdd0e6)
+<img width="516" height="446" alt="image" src="https://github.com/user-attachments/assets/16486ef5-30e4-48b9-823f-76ab34ab1e0a" />
 
 ### Controls
 
