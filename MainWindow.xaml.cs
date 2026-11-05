@@ -40,7 +40,7 @@ namespace auto_click_tool
 
         private DispatcherTimer timerCount;
         private DateTime startTime;
-        private PseudoCursorWindow _pseudoCursor;
+        private readonly List<PseudoCursorWindow> _pseudoCursors = new List<PseudoCursorWindow>();
 
         // Recording mode state
         private bool isRecording = false;
@@ -58,7 +58,6 @@ namespace auto_click_tool
             InitializeTimerCount();
             _proc = HookCallback;
             _hookID = SetHook(_proc);
-            _pseudoCursor = null;
         }
 
         private void SetInitialValues()
@@ -197,20 +196,7 @@ namespace auto_click_tool
         {
             UnhookWindowsHookEx(_hookID);
 
-            // Ensure pseudo cursor window is closed when the main window closes
-            try
-            {
-                if (_pseudoCursor != null)
-                {
-                    _pseudoCursor.Close();
-                    _pseudoCursor = null;
-                }
-            }
-            catch
-            {
-                // Ignore
-            }
-
+            ClearCheckMarkers();
             base.OnClosed(e);
         }
 
@@ -274,57 +260,47 @@ namespace auto_click_tool
 
         }
 
-        // Check button: get coordinates from the caret line and show a pseudo cursor
+        // Check button: show each valid coordinate with its matching line number
         private void btnCheck_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                int caret = txbCordinates.CaretIndex;
-                int lineIndex = txbCordinates.GetLineIndexFromCharacterIndex(caret);
-                if (lineIndex < 0 || lineIndex >= txbCordinates.LineCount) return;
+            ClearCheckMarkers();
 
+            for (int lineIndex = 0; lineIndex < txbCordinates.LineCount; lineIndex++)
+            {
                 string line = txbCordinates.GetLineText(lineIndex).Trim();
-                if (string.IsNullOrWhiteSpace(line)) return;
-
-                var rawParts = line.Split(',');
-                if (rawParts.Length < 2) return;
-
-                string sx = rawParts[0].Trim();
-                string sy = rawParts[1].Trim();
-
-                if (int.TryParse(sx, out int x) && int.TryParse(sy, out int y))
+                if (string.IsNullOrWhiteSpace(line))
                 {
-                    // If a pseudo cursor already exists, move it; otherwise create and show it
-                    if (_pseudoCursor == null)
-                    {
-                        _pseudoCursor = new PseudoCursorWindow();
-                        _pseudoCursor.Show();
-                    }
-
-                    _pseudoCursor.MoveTo(x, y);
+                    continue;
                 }
-            }
-            catch
-            {
-                // Ignore
+
+                string[] rawParts = line.Split(',');
+                if (rawParts.Length < 2 ||
+                    !int.TryParse(rawParts[0].Trim(), out int x) ||
+                    !int.TryParse(rawParts[1].Trim(), out int y))
+                {
+                    continue;
+                }
+
+                PseudoCursorWindow marker = new PseudoCursorWindow();
+                _pseudoCursors.Add(marker);
+                marker.ShowAt(x, y, lineIndex + 1);
             }
         }
 
-        // Reset Check button: remove the pseudo cursor
+        // Reset Check button: remove all coordinate markers
         private void btnResetCheck_Click(object sender, RoutedEventArgs e)
         {
-            try
+            ClearCheckMarkers();
+        }
+
+        private void ClearCheckMarkers()
+        {
+            foreach (PseudoCursorWindow marker in _pseudoCursors)
             {
-                if (_pseudoCursor != null)
-                {
-                    _pseudoCursor.Close();
-                    _pseudoCursor = null;
-                }
+                marker.Close();
             }
-            catch
-            {
-                // Ignore
-            }
+
+            _pseudoCursors.Clear();
         }
 
         private void Timer_Tick(object sender, EventArgs e)

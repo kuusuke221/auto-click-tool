@@ -48,7 +48,25 @@ namespace auto_click_tool
         private void BlinkTimer_Tick(object sender, EventArgs e)
         {
             _visible = !_visible;
-            ellipsePseudoCursor.Opacity = _visible ? 0.95 : 0.15;
+            txtLineNumber.Opacity = _visible ? 0.95 : 0.65;
+        }
+
+        /// <summary>
+        /// Shows the line number at the specified screen coordinates.
+        /// </summary>
+        /// <param name="x">X coordinate in physical pixels.</param>
+        /// <param name="y">Y coordinate in physical pixels.</param>
+        /// <param name="lineNumber">The line number to display.</param>
+        public void ShowAt(int x, int y, int lineNumber)
+        {
+            txtLineNumber.Text = lineNumber.ToString();
+            txtLineNumber.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            double markerSize = Math.Ceiling(Math.Max(txtLineNumber.DesiredSize.Width, txtLineNumber.DesiredSize.Height)) + 2;
+            Width = markerSize;
+            Height = markerSize;
+            Show();
+            UpdateLayout();
+            MoveTo(x, y);
         }
 
         /// <summary>
