@@ -63,8 +63,18 @@
             <Label Grid.Column="1" Content="00:00:00" Height="30" Margin="2" Name="lblTimerCount" HorizontalAlignment="Right"/>
         </Grid>
 
-        <TextBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4" Margin="2,2,2,2" Name="txbCordinates" 
-                 AcceptsReturn="True" 
-                 VerticalScrollBarVisibility="Auto"/>
+        <Grid Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4" Margin="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="52"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0" Name="txbLineNumbers" IsReadOnly="True" IsTabStop="False" Focusable="False"
+                     AcceptsReturn="True" TextWrapping="NoWrap" TextAlignment="Right" Padding="4,2"
+                     Background="#FFF3F3F3" Foreground="#FF777777" BorderThickness="1,1,0,1"
+                     VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Hidden"/>
+            <TextBox Grid.Column="1" Name="txbCordinates" AcceptsReturn="True" TextWrapping="NoWrap"
+                     Padding="4,2" BorderThickness="0,1,1,1" VerticalScrollBarVisibility="Auto"
+                     TextChanged="txbCordinates_TextChanged"/>
+        </Grid>
     </Grid>
 </Window>

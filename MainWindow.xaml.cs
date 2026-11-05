@@ -2,6 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -78,8 +79,25 @@ namespace auto_click_tool
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Set focus to the window
+            txbCordinates.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler(txbCordinates_ScrollChanged));
+            UpdateLineNumbers();
             this.Focus();
+        }
+
+        private void txbCordinates_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            UpdateLineNumbers();
+        }
+
+        private void txbCordinates_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            txbLineNumbers.ScrollToVerticalOffset(e.VerticalOffset);
+        }
+
+        private void UpdateLineNumbers()
+        {
+            int lineCount = Math.Max(1, txbCordinates.LineCount);
+            txbLineNumbers.Text = string.Join(Environment.NewLine, Enumerable.Range(1, lineCount));
         }
 
         private IntPtr SetHook(LowLevelKeyboardProc proc)
