@@ -23,6 +23,9 @@ namespace auto_click_tool
         private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
 
         [DllImport("user32.dll")]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+
+        [DllImport("user32.dll")]
         private static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
         [DllImport("user32.dll")]
@@ -35,8 +38,27 @@ namespace auto_click_tool
         private static extern short GetAsyncKeyState(int vKey);
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+        private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MSLLHOOKSTRUCT
+        {
+            public int X;
+            public int Y;
+            public uint MouseData;
+            public uint Flags;
+            public uint Time;
+            public UIntPtr ExtraInfo;
+        }
+
         private LowLevelKeyboardProc _proc;
+        private LowLevelMouseProc _mouseProc;
         private IntPtr _hookID = IntPtr.Zero;
+        private IntPtr _mouseHookID = IntPtr.Zero;
+
+        private const int WH_KEYBOARD_LL = 13;
+        private const int WH_MOUSE_LL = 14;
+        private const int WM_LBUTTONDOWN = 0x0201;
 
         private DispatcherTimer timerCount;
         private DateTime startTime;
@@ -57,7 +79,9 @@ namespace auto_click_tool
             SetInitialValues();
             InitializeTimerCount();
             _proc = HookCallback;
-            _hookID = SetHook(_proc);
+            _mouseProc = MouseHookCallback;
+            _hookID = SetHook(WH_KEYBOARD_LL, _proc);
+            _mouseHookID = SetHook(WH_MOUSE_LL, _mouseProc);
         }
 
         private void SetInitialValues()
@@ -99,13 +123,37 @@ namespace auto_click_tool
             txbLineNumbers.Text = string.Join(Environment.NewLine, Enumerable.Range(1, lineCount));
         }
 
-        private IntPtr SetHook(LowLevelKeyboardProc proc)
+        private IntPtr SetHook(int hookType, Delegate proc)
         {
             using (Process curProcess = Process.GetCurrentProcess())
             using (ProcessModule curModule = curProcess.MainModule)
             {
-                return SetWindowsHookEx(13, proc, GetModuleHandle(curModule.ModuleName), 0);
+                if (hookType == WH_KEYBOARD_LL)
+                {
+                    return SetWindowsHookEx(hookType, (LowLevelKeyboardProc)proc, GetModuleHandle(curModule.ModuleName), 0);
+                }
+
+                return SetWindowsHookEx(hookType, (LowLevelMouseProc)proc, GetModuleHandle(curModule.ModuleName), 0);
             }
+        }
+
+        // Capture mouse input and record left-button clicks while in Record mode
+        private IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode >= 0 && wParam == (IntPtr)WM_LBUTTONDOWN && isRecording)
+            {
+                MSLLHOOKSTRUCT mouse = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+                DateTime now = DateTime.Now;
+                int elapsedMs = (int)(now - lastRecordTime).TotalMilliseconds;
+                lastRecordTime = now;
+
+                this.Dispatcher.Invoke(() =>
+                {
+                    txbCordinates.Text = txbCordinates.Text + mouse.X.ToString() + ", " + mouse.Y.ToString() + ", " + elapsedMs.ToString() + "\n";
+                });
+            }
+
+            return CallNextHookEx(_mouseHookID, nCode, wParam, lParam);
         }
 
         // Capture keyboard input and dispatch events
@@ -195,6 +243,7 @@ namespace auto_click_tool
         protected override void OnClosed(EventArgs e)
         {
             UnhookWindowsHookEx(_hookID);
+            UnhookWindowsHookEx(_mouseHookID);
 
             ClearCheckMarkers();
             base.OnClosed(e);
