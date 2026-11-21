@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include=".github\instructions\version-release.instructions.md" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.Windows.Forms" Version="4.0.0" />
   </ItemGroup>
 
