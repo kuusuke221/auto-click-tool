@@ -37,6 +37,16 @@ namespace auto_click_tool
         [DllImport("user32.dll")]
         private static extern short GetAsyncKeyState(int vKey);
 
+        [DllImport("user32.dll")]
+        private static extern bool GetCursorPos(out POINT point);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
         private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
 
@@ -147,9 +157,16 @@ namespace auto_click_tool
                 int elapsedMs = (int)(now - lastRecordTime).TotalMilliseconds;
                 lastRecordTime = now;
 
+                POINT cursorPosition;
+                if (!GetCursorPos(out cursorPosition))
+                {
+                    cursorPosition.X = mouse.X;
+                    cursorPosition.Y = mouse.Y;
+                }
+
                 this.Dispatcher.Invoke(() =>
                 {
-                    txbCordinates.Text = txbCordinates.Text + mouse.X.ToString() + ", " + mouse.Y.ToString() + ", " + elapsedMs.ToString() + "\n";
+                    txbCordinates.Text = txbCordinates.Text + cursorPosition.X.ToString() + ", " + cursorPosition.Y.ToString() + ", " + elapsedMs.ToString() + "\n";
                 });
             }
 
@@ -196,7 +213,13 @@ namespace auto_click_tool
                     // If in recording mode, record elapsed time since last record (or since record start)
                     if (isRecording)
                     {
-                        var pos = System.Windows.Forms.Cursor.Position;
+                        POINT pos;
+                        if (!GetCursorPos(out pos))
+                        {
+                            System.Drawing.Point fallbackPosition = System.Windows.Forms.Cursor.Position;
+                            pos.X = fallbackPosition.X;
+                            pos.Y = fallbackPosition.Y;
+                        }
                         DateTime now = DateTime.Now;
                         int elapsedMs = (int)(now - lastRecordTime).TotalMilliseconds;
                         lastRecordTime = now;
@@ -210,7 +233,13 @@ namespace auto_click_tool
                     else
                     {
                         // Existing behavior when not recording: use default click interval
-                        var pos = System.Windows.Forms.Cursor.Position;
+                        POINT pos;
+                        if (!GetCursorPos(out pos))
+                        {
+                            System.Drawing.Point fallbackPosition = System.Windows.Forms.Cursor.Position;
+                            pos.X = fallbackPosition.X;
+                            pos.Y = fallbackPosition.Y;
+                        }
                         this.Dispatcher.Invoke(() =>
                         {
                             txbCordinates.Text = txbCordinates.Text + pos.X.ToString() + ", " + pos.Y.ToString() + ", " + txbClickInterval.Text.ToString() + "\n";
@@ -400,7 +429,13 @@ namespace auto_click_tool
         {
             try
             {
-                var pos = System.Windows.Forms.Cursor.Position;
+                POINT pos;
+                if (!GetCursorPos(out pos))
+                {
+                    System.Drawing.Point fallbackPosition = System.Windows.Forms.Cursor.Position;
+                    pos.X = fallbackPosition.X;
+                    pos.Y = fallbackPosition.Y;
+                }
                 if (isRecording)
                 {
                     DateTime now = DateTime.Now;
@@ -512,8 +547,10 @@ namespace auto_click_tool
             {
                 SetCursorPos(x, y);
 
-                mouse_event(MOUSEEVENTF_LEFTDOWN, x, y, 0, 0);
-                mouse_event(MOUSEEVENTF_LEFTUP, x, y, 0, 0);
+                // dx/dy are relative unless MOUSEEVENTF_ABSOLUTE is set.
+                // The cursor is already positioned by SetCursorPos, so use zero deltas.
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
             }
 
             _currentIndex = (_currentIndex + 1) % _cordinates.Length;
